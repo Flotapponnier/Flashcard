@@ -1,7 +1,31 @@
 #include "display_card.h"
 
-void play_card(t_card *head)
+void copy_cards_to_array(t_card *head, t_card **array)
 {
+    t_card *current = head;
+    int index = 0;
+    while (current != NULL) {
+        array[index] = current;
+        current = current->next;
+        index++;
+    }
+}
+
+void shuffle_array(t_card **array, int size)
+{
+	int i;
+	i = size -1;
+    while (i > 0) 
+    {
+        int j = rand() % (i + 1);
+        t_card *temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+	i--;
+    }
+}
+
+void play_card(t_card *head) {
     int number_card_play;
     int i;
     int score;
@@ -9,21 +33,34 @@ void play_card(t_card *head)
     char answer[MAX_CARD_LENGTH];
     char format[20];
 
-    snprintf(format, sizeof(format), "%%%ds", MAX_CARD_LENGTH - 1);
     i = 0;
+    snprintf(format, sizeof(format), "%%%ds", MAX_CARD_LENGTH - 1);
     score = 0;
     range_max = count_card(head);
-    t_card *current = head;
-    printf("Combien de session ? ");
+
+    printf("Combien de sessions ? ");
     scanf("%d", &number_card_play);
 
     if (range_max <= 0) {
         printf("Pas de cartes disponibles.\n");
         return;
     }
+
+    t_card **card_array = malloc(range_max * sizeof(t_card *));
+    if (card_array == NULL) {
+        fprintf(stderr, "Erreur d'allocation de mémoire.\n");
+        return;
+    }
+
+    copy_cards_to_array(head, card_array);
+
     srand(time(NULL));
-    while ( i < number_card_play && current != NULL)
-    { 
+
+    shuffle_array(card_array, range_max);
+    while (i < number_card_play && i < range_max)
+    {
+	t_card *current = card_array[i];
+
         printf("Carte numéro %d devant : %s \n", i, current->front_card);
         printf("Derrière ? \n");
         scanf(format, answer);
@@ -42,6 +79,7 @@ void play_card(t_card *head)
 	i++;
     }
     printf("Votre score : %d / %d", score, number_card_play);
+    free(card_array);
 }
 
 void show_card(t_card *head)
